@@ -39,6 +39,10 @@
 	onMount(() => {
 		// console.log('message', idx);
 	});
+
+	const handleCitationClick = (citations) => {
+		dispatch('showCitations', citations);
+	};
 </script>
 
 <div
@@ -98,6 +102,8 @@
 					}
 				}}
 				{readOnly}
+				on:showCitations
+				on:showCitation
 			/>
 		{:else}
 			<MultiResponseMessages

@@ -78,6 +78,11 @@
 	import ChatControls from './ChatControls.svelte';
 	import EventConfirmDialog from '../common/ConfirmDialog.svelte';
 	import Placeholder from './Placeholder.svelte';
+	import CitationsPanel from './CitationsPanel.svelte';
+	import { createEventDispatcher } from 'svelte';
+	const dispatch = createEventDispatcher();
+
+	import CitationWindow from './Citations/CitationWindow.svelte';
 
 	export let chatIdProp = '';
 
@@ -124,6 +129,19 @@
 	let chatFiles = [];
 	let files = [];
 	let params = {};
+
+	// Add new state for citations panel
+	let showCitations = false;
+	let currentCitations = [];
+
+	// Modify your message handling to update citations when RAG response comes in
+	$: if (history?.messages) {
+		const currentMessage = history.messages[history.currentId];
+		if (currentMessage?.citations?.length > 0) {
+			currentCitations = currentMessage.citations;
+			showCitations = true;
+		}
+	}
 
 	$: if (chatIdProp) {
 		(async () => {
@@ -420,6 +438,12 @@
 	//////////////////////////
 
 	const initNewChat = async () => {
+		// Reset citations panel
+		showCitations = false;
+		currentCitations = [];
+		showCitationWindow = false;
+		selectedCitation = null;
+
 		await showControls.set(false);
 		await showCallOverlay.set(false);
 		await showOverview.set(false);
@@ -1934,29 +1958,29 @@
 					allTags.set(await getAllTags(localStorage.token));
 				}
 			}
-
-			const lastMessage = messages.at(-1);
-			const modelId = selectedModels[0];
-
-			let generatedTags = await generateTags(localStorage.token, modelId, messages, $chatId).catch(
-				(error) => {
-					console.error(error);
-					return [];
-				}
-			);
-
-			generatedTags = generatedTags.filter(
-				(tag) => !currentTags.find((t) => t.id === tag.replaceAll(' ', '_').toLowerCase())
-			);
-			console.log(generatedTags);
-
-			for (const tag of generatedTags) {
-				await addTagById(localStorage.token, $chatId, tag);
-			}
-
-			chat = await getChatById(localStorage.token, $chatId);
-			allTags.set(await getAllTags(localStorage.token));
 		}
+
+		const lastMessage = messages.at(-1);
+		const modelId = selectedModels[0];
+
+		let generatedTags = await generateTags(localStorage.token, modelId, messages, $chatId).catch(
+			(error) => {
+				console.error(error);
+				return [];
+			}
+		);
+
+		generatedTags = generatedTags.filter(
+			(tag) => !currentTags.find((t) => t.id === tag.replaceAll(' ', '_').toLowerCase())
+		);
+		console.log(generatedTags);
+
+		for (const tag of generatedTags) {
+			await addTagById(localStorage.token, $chatId, tag);
+		}
+
+		chat = await getChatById(localStorage.token, $chatId);
+		allTags.set(await getAllTags(localStorage.token));
 	};
 
 	const getWebSearchResults = async (
@@ -2083,6 +2107,23 @@
 			}
 		}
 	};
+
+	let showCitationWindow = false;
+	let selectedCitation = null;
+
+	// Function to handle showing citations
+	const handleShowCitations = (citations) => {
+		currentCitations = citations;
+		showCitations = true;
+	};
+
+	// Also reset when chat ID changes
+	$: if ($chatId) {
+		showCitations = false;
+		currentCitations = [];
+		showCitationWindow = false;
+		selectedCitation = null;
+	}
 </script>
 
 <svelte:head>
@@ -2237,6 +2278,14 @@
 											await sendPrompt(userPrompt, userMessageId);
 										}
 									}}
+									on:showCitations={(e) => {
+										console.log('showCitations event received', e.detail);
+										handleShowCitations(e.detail);
+									}}
+									on:showCitation={(e) => {
+										console.log('showCitation event received', e.detail);
+										// Handle showing individual citation
+									}}
 								/>
 							</div>
 						</div>
@@ -2330,23 +2379,45 @@
 				bind:this={controlPaneComponent}
 				bind:history
 				bind:chatFiles
-				bind:params
-				bind:files
-				bind:pane={controlPane}
-				chatId={$chatId}
-				modelId={selectedModelIds?.at(0) ?? null}
-				models={selectedModelIds.reduce((a, e, i, arr) => {
-					const model = $models.find((m) => m.id === e);
-					if (model) {
-						return [...a, model];
-					}
-					return a;
-				}, [])}
-				{submitPrompt}
-				{stopResponse}
-				{showMessage}
-				{eventTarget}
+					bind:params
+					bind:files
+					bind:pane={controlPane}
+					chatId={$chatId}
+					modelId={selectedModelIds?.at(0) ?? null}
+					models={selectedModelIds.reduce((a, e, i, arr) => {
+						const model = $models.find((m) => m.id === e);
+						if (model) {
+							return [...a, model];
+						}
+						return a;
+					}, [])}
+					{submitPrompt}
+					{stopResponse}
+					{showMessage}
+					{eventTarget}
 			/>
 		</PaneGroup>
 	</div>
 {/if}
+
+<!-- Add the panel to your existing chat layout -->
+<div class="relative">
+	<!-- Your existing chat content -->
+	
+	<!-- Citations Panel -->
+	<CitationsPanel
+		citations={currentCitations}
+		visible={showCitations && currentCitations?.length > 0}
+		on:close={() => showCitations = false}
+		on:showCitation={(e) => {
+			selectedCitation = e.detail;
+			showCitationWindow = true;
+		}}
+		/>
+
+	<CitationWindow
+		citation={selectedCitation}
+		visible={showCitationWindow}
+		on:close={() => showCitationWindow = false}
+	/>
+</div>

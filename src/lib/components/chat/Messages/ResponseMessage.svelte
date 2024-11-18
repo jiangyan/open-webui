@@ -654,7 +654,16 @@
 								{/if}
 
 								{#if message.citations}
-									<Citations citations={message.citations} />
+									<div class="mt-1 mb-2 w-full flex gap-1 items-center">
+										<div class="flex gap-1 text-xs font-semibold">
+											<button 
+												class="no-toggle flex dark:text-gray-300 py-1 px-2 bg-gray-50 hover:bg-gray-100 dark:bg-gray-850 dark:hover:bg-gray-800 transition rounded-xl"
+												on:click={() => dispatch('showCitations', message.citations)}
+											>
+												Sources...
+											</button>
+										</div>
+									</div>
 								{/if}
 
 								{#if message.code_executions}

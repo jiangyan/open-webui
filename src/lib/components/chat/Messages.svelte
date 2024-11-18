@@ -403,6 +403,8 @@
 									}, 100);
 								}
 							}}
+							on:showCitations
+							on:showCitation
 						/>
 					{/each}
 				</div>
