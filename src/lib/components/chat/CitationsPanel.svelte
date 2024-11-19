@@ -22,9 +22,9 @@
 
 {#if citations && citations.length > 0 && visible}
   <div 
-    class="citations-panel fixed top-0 right-0 bottom-0 w-[400px] bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 overflow-y-auto z-50"
+    class="citations-panel h-full w-[350px] bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 overflow-y-auto"
     class:translate-x-full={!visible}
-    transition:fly={{ x: 400, duration: 200 }}
+    transition:fly={{ x: 350, duration: 200 }}
   >
     <div class="flex flex-col h-full">
       <div class="flex justify-between dark:text-gray-300 px-5 pt-4 pb-2">

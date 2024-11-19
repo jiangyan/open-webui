@@ -2400,8 +2400,8 @@
 	</div>
 {/if}
 
-<!-- Add the panel to your existing chat layout -->
-<div class="relative">
+<!-- Update the container div to use flex -->
+<div class="relative flex h-full">
 	<!-- Your existing chat content -->
 	
 	<!-- Citations Panel -->
@@ -2417,7 +2417,7 @@
 
 	<CitationWindow
 		citation={selectedCitation}
-		visible={showCitationWindow}
-		on:close={() => showCitationWindow = false}
+			visible={showCitationWindow}
+			on:close={() => showCitationWindow = false}
 	/>
 </div>
